@@ -5,13 +5,14 @@ import { UserService } from './user.service';
 const createUser = async (req: Request, res: Response) => {
   try {
     const user = req.body;
-    
+    console.log(user);
+
     const zodPerseUser = userValidation.userValidationSchema.parse(user);
     const result = await UserService.createUserIntoDB(zodPerseUser);
-    
+
     res.status(200).send({
       success: true,
-      message: 'Data recevied man!',
+      message: 'User created successfully.',
       result,
     });
   } catch (error) {
