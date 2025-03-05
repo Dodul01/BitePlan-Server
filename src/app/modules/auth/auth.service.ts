@@ -126,9 +126,14 @@ export const loginUser = async (payload: TLoginUser) => {
   // Prepare the payload for JWT.
   const jwtPayload = {
     _id: user._id.toString(),
+    name: user.name,
     email: user.email,
     phone: user.phone,
     role: user.role,
+    busisnessName: user.busisnessName || '',
+    cuisineSepcialties: user.cuisineSepcialties || '',
+    deliveryAddress: user.deliveryAddress || '',
+    // logoImage: user?.logoImage || '',
   };
 
   // Create a JWT token using your helper function.
