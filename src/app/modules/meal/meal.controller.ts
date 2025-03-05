@@ -6,6 +6,7 @@ import { mealValidation } from './meal.validation';
 const createMeal = async (req: Request, res: Response) => {
   try {
     const meal = req.body;
+
     const zodPerseMeal = mealValidation.mealValidationSchema.parse(meal);
     const result = await MealService.createMealIntoDB(zodPerseMeal);
 
@@ -25,6 +26,27 @@ const createMeal = async (req: Request, res: Response) => {
   }
 };
 
+const getMeals = async (req: Request, res: Response) => {
+  try {
+    const result = await MealService.getMealFromDB();
+
+    res.status(200).send({
+      status: true,
+      message: 'Meal retrieved successfully',
+      data: result,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: 'Something went wrong',
+      statusCode: 400,
+      error: error,
+      stack: (error as Error).stack,
+    });
+  }
+};
+
 export const MealControllers = {
-    createMeal
-}
+  createMeal,
+  getMeals,
+};
