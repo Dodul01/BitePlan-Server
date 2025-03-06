@@ -9,6 +9,7 @@ const mealSchema = new Schema<IMealDocument>(
     description: { type: String, required: true },
     image: { type: String, required: true },
     prepTime: { type: String, required: true },
+    price: { type: Number, required: true },
     servings: { type: Number, required: true },
     tags: { type: [String], required: true },
     dietaryInfo: { type: [String], required: true },

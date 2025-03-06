@@ -19,6 +19,9 @@ export const mealValidationSchema = z.object({
   prepTime: z.string({
     required_error: "Preparation time is required.",
   }),
+  price: z.number({
+    required_error: "Price is required.",
+  }),
   servings: z.number({
     required_error: "Servings is required.",
   }),

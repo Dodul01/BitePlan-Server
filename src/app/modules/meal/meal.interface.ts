@@ -26,6 +26,7 @@ export interface IMeal {
   description: string;
   image: string;
   prepTime: string;
+  price: number;
   servings: number;
   tags: string[];
   dietaryInfo: string[];
