@@ -7,10 +7,10 @@ const createOrder = async (req: Request, res: Response) => {
     const order = req.body;
     const zodParseOrder = orderValidation.orderValidationSchema.parse(order);
     const result = await OrderService.createOrderIntoDB(zodParseOrder);
-
+    
     res.status(200).send({
       success: true,
-      message: 'Meal created successfully.',
+      message: 'Meal Ordered successfully.',
       result,
     });
   } catch (error) {

@@ -13,6 +13,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
   ): Promise<void> => {
     try {
       const authHeader = req.headers.authorization;
+      // console.log(authHeader);
 
       // Check if the Authorization header is missing
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
