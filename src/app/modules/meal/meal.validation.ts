@@ -33,6 +33,9 @@ export const mealValidationSchema = z.object({
   }),
   dietaryOptions: DietaryOptionsEnum,
   cuisineOptions: CuisineOptionsEnum,
+  busisnessName: z.string({
+    required_error: "Busisness name is required.",
+  })
 });
 
 export const mealValidation = {

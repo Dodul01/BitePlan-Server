@@ -34,4 +34,5 @@ export interface IMeal {
   rating: number;
   dietaryOptions: DietaryOptions;
   cuisineOptions: CuisineOptions;
+  busisnessName: string;
 }

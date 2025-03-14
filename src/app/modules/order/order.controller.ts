@@ -7,7 +7,7 @@ const createOrder = async (req: Request, res: Response) => {
     const order = req.body;
     const zodParseOrder = orderValidation.orderValidationSchema.parse(order);
     const result = await OrderService.createOrderIntoDB(zodParseOrder);
-    
+
     res.status(200).send({
       success: true,
       message: 'Meal Ordered successfully.',
@@ -24,6 +24,28 @@ const createOrder = async (req: Request, res: Response) => {
   }
 };
 
+const getOrders = async (req: Request, res: Response) => {
+  try {
+    const email = req.params.email;
+    const allOrders = await OrderService.getOrdersFromDB(email);
+
+    res.send({
+      status: true,
+      message: 'All Order Retrived successfully',
+      data: {
+        allOrders,
+      },
+    });
+  } catch (error) {
+    res.send({
+      status: false,
+      message: 'Something went wrong!',
+      error,
+    });
+  }
+};
+
 export const OrderController = {
   createOrder,
+  getOrders,
 };

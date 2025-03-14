@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 interface IOrder extends Document {
   orderedItemIds: string[];
   userEmail: string;
+  status: string;
 }
 
 const OrderSchema = new Schema<IOrder>(
@@ -22,6 +23,11 @@ const OrderSchema = new Schema<IOrder>(
         validator: (email: string) => /\S+@\S+\.\S+/.test(email),
         message: 'Invalid email format',
       },
+    },
+    status: {
+      type: String,
+      enum: ['processing', 'shipped', 'delivered'],
+      default: 'processing',
     },
   },
   { timestamps: true },

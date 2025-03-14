@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Meal } from '../meal/meal.model';
+import { User } from '../user/user.model';
 import { OrderPayload } from './order.interface';
 import { Order } from './order.model';
 import nodemailer from 'nodemailer';
@@ -19,7 +20,7 @@ const sendInvoiceEmail = async (email: string, orderData: any) => {
     service: 'gmail',
     auth: {
       user: 'allendodul6@gmail.com',
-      pass: 'gkbq saom tmxp loll', // Use environment variables for better security
+      pass: 'gkbq saom tmxp loll',
     },
   });
 
@@ -113,6 +114,56 @@ const createOrderIntoDB = async (order: OrderPayload) => {
   }
 };
 
+const getOrdersFromDB = async (email: string) => {
+  try {
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    let orders: any[] = [];
+
+    if (user.role === 'customer') {
+      // Fetch orders for the customer
+      orders = await Order.find({ userEmail: email });
+    } else if (user.role === 'seller') {
+      // Find all meals for this seller
+      const allMeal = await Meal.find({ busisnessName: user.busisnessName });
+
+      // Extract meal IDs
+      const mealIds = allMeal.map((meal) => meal._id);
+
+      // Fetch orders and populate ordered meals
+      orders = await Order.find({ orderedItemIds: { $in: mealIds } }).populate(
+        'orderedItemIds',
+      );
+    } else {
+      throw new Error('Invalid role');
+    }
+
+    // fetch meal item details
+    const ordersWithMealDetails = await Promise.all(
+      orders.map(async (order) => {
+        const mealDetails = await Meal.find({
+          _id: { $in: order.orderedItemIds },
+        });
+
+        return {
+          ...order.toObject(), // convert mongoose document to plain javascript object
+          orderedItemIds: mealDetails,
+        };
+      }),
+    );
+
+    return ordersWithMealDetails;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw error;
+  }
+};
+
 export const OrderService = {
   createOrderIntoDB,
+  getOrdersFromDB,
 };

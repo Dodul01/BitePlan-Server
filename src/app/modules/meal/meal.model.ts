@@ -29,6 +29,7 @@ const mealSchema = new Schema<IMealDocument>(
       enum: Object.values(CuisineOptions),
       required: true,
     },
+    busisnessName: { type: String, required: true },
   },
   { timestamps: true },
 );
