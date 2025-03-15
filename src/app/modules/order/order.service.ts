@@ -15,7 +15,7 @@ const stripe = new Stripe(
 );
 
 // Send invoice email to the customer
-const sendInvoiceEmail = async (email: string, orderData: any) => {
+const sendInvoiceEmail = async (email: string, orderData: any) => { 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -163,7 +163,17 @@ const getOrdersFromDB = async (email: string) => {
   }
 };
 
+const updateOrderStatusFromDB = async (id: string, data: any) => {
+  const result = await Order.findByIdAndUpdate(
+    id,
+    { $set: data },
+    { new: true },
+  );
+  return result;
+};
+
 export const OrderService = {
   createOrderIntoDB,
   getOrdersFromDB,
+  updateOrderStatusFromDB,
 };

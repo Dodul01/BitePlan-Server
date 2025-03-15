@@ -45,7 +45,28 @@ const getOrders = async (req: Request, res: Response) => {
   }
 };
 
+const updateOrderStatus = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const data = req.body;
+    const result = await OrderService.updateOrderStatusFromDB(id, data);
+
+    res.send({
+      status: true,
+      message: 'Status updated successfully.',
+      data: result,
+    });
+  } catch (error) {
+    res.send({
+      status: false,
+      message: 'Something went wrong!',
+      error,
+    });
+  }
+};
+
 export const OrderController = {
   createOrder,
   getOrders,
+  updateOrderStatus,
 };
