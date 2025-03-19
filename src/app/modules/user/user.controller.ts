@@ -49,11 +49,12 @@ const getUser = async (req: Request, res: Response) => {
 const updateUser = async (req: Request, res: Response) => {
   try {
     const email = req.params.email;
-    const result = UserService.updateUserFromDB(email)
+    const data = req.body;
+    const result = await UserService.updateUserFromDB(email, data);
 
     res.status(200).send({
       success: true,
-      message: 'User get successfully.',
+      message: 'Profile updated successfully.',
       result,
     });
   } catch (error) {
@@ -70,5 +71,5 @@ const updateUser = async (req: Request, res: Response) => {
 export const UserControllers = {
   createUser,
   getUser,
-  updateUser
+  updateUser,
 };

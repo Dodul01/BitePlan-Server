@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TUser } from './user.interface';
 import { User } from './user.model';
 
@@ -11,8 +12,14 @@ const getUserFromDB = async (email: string) => {
   return user;
 };
 
-const updateUserFromDB = async (email: string) => {
-  console.log(email);
+const updateUserFromDB = async (email: string, data: any) => {
+  const updatedUser = await User.findOneAndUpdate(
+    { email },
+    { $set: data },
+    { new: true, projection: { password: 0 } },
+  );
+
+  return updatedUser;
 };
 
 export const UserService = {

@@ -10,5 +10,10 @@ router.get(
   auth('customer', 'seller'),
   UserControllers.getUser,
 );
+router.put(
+  '/update-user/:email',
+  auth('customer', 'seller'),
+  UserControllers.updateUser,
+);
 
 export const UserRouter = router;
