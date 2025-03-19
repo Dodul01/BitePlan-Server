@@ -6,6 +6,17 @@ const createUserIntoDB = async (user: TUser) => {
   return result;
 };
 
+const getUserFromDB = async (email: string) => {
+  const user = await User.findOne({ email }).select('-password');
+  return user;
+};
+
+const updateUserFromDB = async (email: string) => {
+  console.log(email);
+};
+
 export const UserService = {
   createUserIntoDB,
+  getUserFromDB,
+  updateUserFromDB,
 };
