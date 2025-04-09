@@ -15,7 +15,7 @@ const stripe = new Stripe(
 );
 
 // Send invoice email to the customer
-const sendInvoiceEmail = async (email: string, orderData: any) => { 
+const sendInvoiceEmail = async (email: string, orderData: any) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -41,48 +41,107 @@ const sendInvoiceEmail = async (email: string, orderData: any) => {
   }
 };
 
+// const createOrderIntoDB = async (order: OrderPayload) => {
+//   // console.log(order);
+
+//   try {
+//     // STEP 1. Create order entry in the DB (without payment confirmation for now)
+//     const newOrder = new Order({
+//       orderedItemIds: order.orderedItemIds,
+//       paymentMethod: order?.paymentMethod,
+//       userEmail: order.user.email,
+//       totalAmount: 0,
+//     });
+
+//     // Save the order into the DB
+//     const savedOrder = await newOrder.save();
+
+//     // 2. Fetch product details based on ordered item IDs
+//     const productDetails = await Meal.find({
+//       _id: { $in: savedOrder.orderedItemIds },
+//     });
+
+//     // 3. Calculate the total amount by multiplying item price with quantity
+//     let totalAmount = 0;
+
+//     const itemsWithDetails = savedOrder.orderedItemIds
+//       .map((itemId: string) => {
+//         const product = productDetails.find(
+//           (p: typeof Meal.prototype) => p._id.toString() === itemId.toString(),
+//         );
+//         const quantity = order.orderedItemIds.filter(
+//           (id) => id === itemId,
+//         ).length;
+//         if (product) {
+//           totalAmount += product.price * quantity;
+//           return {
+//             name: product.name,
+//             price: product.price,
+//             quantity,
+//           };
+//         }
+//         return null;
+//       })
+//       .filter((item) => item !== null);
+
+//     // 4. Confirm payment using Stripe
+//     const paymentIntent = await stripe.paymentIntents.create({
+//       amount: totalAmount * 100,
+//       currency: 'usd',
+//       payment_method: order.paymentMethod?.id,
+//       confirm: true,
+//       automatic_payment_methods: {
+//         enabled: true,
+//         allow_redirects: 'never',
+//       },
+//     });
+
+//     // Check if the payment was successful
+//     if (paymentIntent.status === 'succeeded') {
+//       // console.log('Payment successful!');
+
+//       // 5. Send the invoice email to the customer
+//       await sendInvoiceEmail('mozammelhoquedodul3@gmail.com', {
+//         items: itemsWithDetails,
+//         orderId: savedOrder._id,
+//       });
+
+//       return savedOrder;
+//     } else {
+//       throw new Error('Payment failed');
+//     }
+//   } catch (error) {
+//     console.log('Error creating order in DB:', error);
+//     throw new Error('Error creating order and processing payment.');
+//   }
+// };
+
 const createOrderIntoDB = async (order: OrderPayload) => {
   try {
-    // STEP 1. Create order entry in the DB (without payment confirmation for now)
-    const newOrder = new Order({
-      orderedItemIds: order.orderedItemIds,
-      paymentMethod: order?.paymentMethod,
-      userEmail: order.user.email,
-      totalAmount: 0,
-    });
-
-    // Save the order into the DB
-    const savedOrder = await newOrder.save();
-
-    // 2. Fetch product details based on ordered item IDs
-    const productDetails = await Meal.find({
-      _id: { $in: savedOrder.orderedItemIds },
-    });
-
-    // 3. Calculate the total amount by multiplying item price with quantity
+    // 1. Calculate total amount from ordered items
     let totalAmount = 0;
 
-    const itemsWithDetails = savedOrder.orderedItemIds
-      .map((itemId: string) => {
-        const product = productDetails.find(
-          (p: typeof Meal.prototype) => p._id.toString() === itemId.toString(),
-        );
-        const quantity = order.orderedItemIds.filter(
-          (id) => id === itemId,
-        ).length;
-        if (product) {
-          totalAmount += product.price * quantity;
-          return {
-            name: product.name,
-            price: product.price,
-            quantity,
-          };
-        }
-        return null;
-      })
-      .filter((item) => item !== null);
+    const itemsWithDetails = order.orderedItemIds.map((item) => {
+      const { meal } = item;
+      totalAmount += meal.price;
+      return {
+        name: meal.name,
+        price: meal.price,
+        quantity: 1, // Assuming 1 per item for now
+      };
+    });
 
-    // 4. Confirm payment using Stripe
+    // 2. Create the order document
+    const newOrder = new Order({
+      orderedItemIds: order.orderedItemIds, // full items with meal + customization + schedule
+      paymentMethod: order.paymentMethod,
+      user: order.user,
+      status: 'processing',
+    });
+
+    const savedOrder = await newOrder.save();
+
+    // 3. Confirm payment using Stripe
     const paymentIntent = await stripe.paymentIntents.create({
       amount: totalAmount * 100,
       currency: 'usd',
@@ -94,12 +153,9 @@ const createOrderIntoDB = async (order: OrderPayload) => {
       },
     });
 
-    // Check if the payment was successful
     if (paymentIntent.status === 'succeeded') {
-      // console.log('Payment successful!');
-
-      // 5. Send the invoice email to the customer
-      await sendInvoiceEmail('mozammelhoquedodul3@gmail.com', {
+      // 4. Send invoice email
+      await sendInvoiceEmail(order.user.email, {
         items: itemsWithDetails,
         orderId: savedOrder._id,
       });
@@ -109,7 +165,7 @@ const createOrderIntoDB = async (order: OrderPayload) => {
       throw new Error('Payment failed');
     }
   } catch (error) {
-    console.log('Error creating order in DB:', error);
+    console.error('Error creating order in DB:', error);
     throw new Error('Error creating order and processing payment.');
   }
 };
@@ -118,6 +174,7 @@ const getOrdersFromDB = async (email: string) => {
   try {
     // Find user by email
     const user = await User.findOne({ email });
+
     if (!user) {
       throw new Error('User not found');
     }
@@ -125,38 +182,22 @@ const getOrdersFromDB = async (email: string) => {
     let orders: any[] = [];
 
     if (user.role === 'customer') {
-      // Fetch orders for the customer
-      orders = await Order.find({ userEmail: email });
+      // Fetch orders for the customer by email
+      orders = await Order.find({ 'user.email': email }).exec();
     } else if (user.role === 'seller') {
-      // Find all meals for this seller
-      const allMeal = await Meal.find({ busisnessName: user.busisnessName });
-
-      // Extract meal IDs
-      const mealIds = allMeal.map((meal) => meal._id);
-
-      // Fetch orders and populate ordered meals
-      orders = await Order.find({ orderedItemIds: { $in: mealIds } }).populate(
-        'orderedItemIds',
+      const allMeals = await Meal.find({ busisnessName: user.busisnessName });
+      const mealIds = allMeals.map((meal: typeof Meal.prototype) =>
+        meal._id.toString(),
       );
+
+      orders = await Order.find({
+        'orderedItemIds.meal._id': { $in: mealIds },
+      });
     } else {
       throw new Error('Invalid role');
     }
 
-    // fetch meal item details
-    const ordersWithMealDetails = await Promise.all(
-      orders.map(async (order) => {
-        const mealDetails = await Meal.find({
-          _id: { $in: order.orderedItemIds },
-        });
-
-        return {
-          ...order.toObject(), // convert mongoose document to plain javascript object
-          orderedItemIds: mealDetails,
-        };
-      }),
-    );
-
-    return ordersWithMealDetails;
+    return orders;
   } catch (error) {
     console.error('Error fetching orders:', error);
     throw error;
