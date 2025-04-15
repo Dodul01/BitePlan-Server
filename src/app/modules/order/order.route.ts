@@ -12,7 +12,7 @@ router.get(
 );
 router.put(
   '/order-status/:id',
-  auth('seller'),
+  auth('seller', 'customer'),
   OrderController.updateOrderStatus,
 );
 
