@@ -23,8 +23,8 @@ export const orderValidationSchema = z.object({
         updatedAt: z.string(),
         __v: z.number(),
       }),
-      customization: z.string().min(1),
-      schedule: z.string().min(1),
+      customization: z.string().optional(),
+      schedule: z.string().optional(),
     }),
   ),
 

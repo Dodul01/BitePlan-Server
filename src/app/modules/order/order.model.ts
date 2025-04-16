@@ -27,8 +27,8 @@ const MealSchema = new Schema(
 const OrderedItemSchema = new Schema(
   {
     meal: { type: MealSchema, required: true },
-    customization: { type: String, required: true },
-    schedule: { type: String, required: true },
+    customization: { type: String },
+    schedule: { type: String },
   },
   { _id: false },
 );
