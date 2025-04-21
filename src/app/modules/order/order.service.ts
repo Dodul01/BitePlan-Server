@@ -24,14 +24,81 @@ const sendInvoiceEmail = async (email: string, orderData: any) => {
     },
   });
 
+  // Old one
+
+  // const mailOptions = {
+  //   from: 'allendodul6@gmail.com',
+  //   to: email,
+  //   subject: 'Order Confirmation - Invoice',
+  //   text: `Thank you for your order! Your payment of $${orderData.totalAmount} has been successfully processed.
+  //   Order ID: ${orderData.orderId}
+  //   Items:
+  //   ${orderData.items.map((item: any) => `${item.name} (x${item.quantity}) - $${item.price}`).join('\n')}`,
+  // };
+
+  const total = orderData.items
+    .reduce((sum: number, item: any) => sum + item.price, 0)
+    .toFixed(2);
+
+  // New one
   const mailOptions = {
     from: 'allendodul6@gmail.com',
     to: email,
-    subject: 'Order Confirmation - Invoice',
-    text: `Thank you for your order! Your payment of $${orderData.totalAmount} has been successfully processed.
-    Order ID: ${orderData.orderId}
-    Items: 
-    ${orderData.items.map((item: any) => `${item.name} (x${item.quantity}) - $${item.price}`).join('\n')}`,
+    subject: 'MealBox Order Confirmation - Invoice',
+    html: `
+    <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 30px;">
+      <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 10px; overflow: hidden;">
+        <div style="background-color: #44C356; color: #ffffff; padding: 20px;">
+          <h2 style="margin: 0;">Thanks for ordering, ${orderData.customerName || 'Customer'}!</h2>
+          <p style="margin: 5px 0 0;">Here’s your receipt for MealBox.</p>
+        </div>
+  
+        <div style="padding: 20px;">
+          <h3 style="margin-top: 0; color: #333;">Total Paid</h3>
+          <p style="font-size: 24px; font-weight: bold; color: #44C356;">$${total}</p>
+  
+          <div style="margin-top: 20px; padding: 15px; background-color: #f0f0f0; border-left: 5px solid #44C356;">
+            <strong>Order ID:</strong> ${orderData.orderId}<br/>
+            <strong>Date:</strong> ${new Date().toLocaleDateString()}
+          </div>
+  
+          <!-- Updated Items Section -->
+          <h4 style="margin-top: 30px;">Your Meals</h4>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            ${orderData.items
+              .map(
+                (item: any) => `
+              <li style="display: flex; align-items: center; margin-bottom: 15px;">
+                <div>
+                  <p style="margin: 0; font-weight: 600;">${item.name}</p>
+                  <p style="margin: 3px 0 0; color: #555;">
+                    $${(item.price * item.quantity).toFixed(2)}
+                  </p>
+                </div>
+              </li>
+            `,
+              )
+              .join('')}
+          </ul>
+  
+          <div style="margin-top: 30px;">
+            <p><strong>Payment Method:</strong> Mastercard •••• ${orderData.cardLast4 || '****'}</p>
+            <p style="color: #888;">Your order is in processing.</p>
+          </div>
+  
+          <div style="margin-top: 30px; text-align: center;">
+            <a href="https://mealbox-client-red.vercel.app/find-meals" style="background-color: #44C356; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 5px;">
+              Find Your Favorit meal
+            </a>
+          </div>
+        </div>
+  
+        <div style="background-color: #000; color: #fff; text-align: center; padding: 15px; font-size: 14px;">
+          MealBox • Personalized Meal Planning & Delivery
+        </div>
+      </div>
+    </div>
+    `,
   };
 
   try {
@@ -52,7 +119,7 @@ const createOrderIntoDB = async (order: OrderPayload) => {
       return {
         name: meal.name,
         price: meal.price,
-        quantity: 1, // Assuming 1 per item for now
+        quantity: 1,
       };
     });
 
